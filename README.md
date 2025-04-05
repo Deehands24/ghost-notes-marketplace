@@ -1,3 +1,45 @@
+# Ghost Notes - Hip Hop Beat Market
+
+This project combines three separate React projects into a single ecommerce application for selling hip hop beats.
+
+## Project Structure
+
+This application integrates three main pages from separate projects:
+- **Home Landing Page** - The main landing page for the site
+- **Upload Page** - For users to upload beats/content
+- **Product Page** - For displaying and selling products
+
+## Integration Approach
+
+The integration approach is as follows:
+
+1. The main application uses React Router to navigate between the three pages
+2. Each page component is imported from its respective project
+3. A single navigation component allows users to move between pages
+4. Shared assets, styles, and components are centralized
+
+## Pages
+
+- `/` - Home Landing Page (from Project 1)
+- `/upload` - Upload Page (from Project 2)
+- `/product` - Product Page (from Project 3)
+
+## Development
+
+To run the application:
+
+```bash
+npm install
+npm start
+```
+
+## Next Steps
+
+1. Copy the necessary assets from each project
+2. Integrate each page component into the main application
+3. Style the navigation to match the overall design
+4. Ensure proper routing and state management
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
