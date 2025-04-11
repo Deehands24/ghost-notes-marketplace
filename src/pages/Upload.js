@@ -1,6 +1,68 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { createBeat } from '../services/beats';
+import { isAuthenticated } from '../services/auth';
 
 const Upload = () => {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    price: '',
+    audioUrl: '',
+    imageUrl: '',
+    tags: []
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  // Check if user is authenticated
+  React.useEffect(() => {
+    if (!isAuthenticated()) {
+      navigate('/');
+      // You might want to show a message that they need to login
+    }
+  }, [navigate]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prevState => ({
+      ...prevState,
+      [name]: value
+    }));
+  };
+
+  const handleTagsChange = (e) => {
+    const tags = e.target.value.split(',').map(tag => tag.trim());
+    setFormData(prevState => ({
+      ...prevState,
+      tags
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    
+    try {
+      // For now, we'll use placeholder URLs until we implement file upload
+      const beatData = {
+        ...formData,
+        price: parseFloat(formData.price),
+        audioUrl: formData.audioUrl || 'https://example.com/audio.mp3',
+        imageUrl: formData.imageUrl || 'https://example.com/image.jpg'
+      };
+      
+      await createBeat(beatData);
+      navigate('/product'); // Redirect to products page after successful upload
+    } catch (err) {
+      setError(err.message || 'Failed to upload beat');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="bg-neutral-dark min-h-screen pb-16">
       {/* Header Banner */}
@@ -18,7 +80,13 @@ const Upload = () => {
 
       {/* Upload Form */}
       <div className="max-w-3xl mx-auto px-4">
-        <div className="flex flex-col gap-8">
+        {error && (
+          <div className="bg-red-500 text-white p-4 mb-6 rounded">
+            {error}
+          </div>
+        )}
+        
+        <form onSubmit={handleSubmit} className="flex flex-col gap-8">
           {/* Upload File Section */}
           <div className="mb-8">
             <div className="mb-4">
@@ -33,7 +101,11 @@ const Upload = () => {
                 </svg>
                 <p className="text-gray-400 text-center">PNG, GIF, WEBP, MP4 or MP3. Max size: 100MB</p>
               </div>
-              <button className="border border-primary-colour text-primary-colour px-6 py-2 rounded-full font-semibold">
+              <button 
+                type="button"
+                className="border border-primary-colour text-primary-colour px-6 py-2 rounded-full font-semibold"
+                disabled={loading}
+              >
                 Upload
               </button>
             </div>
@@ -47,22 +119,13 @@ const Upload = () => {
             <div className="bg-background rounded-xl border border-gray-700 px-4 py-4">
               <input 
                 type="text" 
-                placeholder="e.g: Crypto Hunks" 
+                name="title"
+                value={formData.title}
+                onChange={handleChange}
+                placeholder="e.g: Midnight Vibes" 
                 className="bg-transparent text-gray-400 w-full outline-none"
-              />
-            </div>
-          </div>
-
-          {/* External Link Field */}
-          <div className="mb-6">
-            <label className="block text-white text-xl font-bold mb-4">
-              External Link<span className="text-primary-colour">*</span>
-            </label>
-            <div className="bg-background rounded-xl border border-gray-700 px-4 py-4">
-              <input 
-                type="text" 
-                placeholder="e.g: https://yoursite.io/item/123" 
-                className="bg-transparent text-gray-400 w-full outline-none"
+                required
+                disabled={loading}
               />
             </div>
           </div>
@@ -74,8 +137,13 @@ const Upload = () => {
             </label>
             <div className="bg-background rounded-xl border border-gray-700 px-4 py-4">
               <textarea 
-                placeholder="e.g: This is a very limited item" 
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                placeholder="e.g: This is a smooth hip hop beat perfect for..." 
                 className="bg-transparent text-gray-400 w-full outline-none min-h-[120px]"
+                required
+                disabled={loading}
               ></textarea>
             </div>
           </div>
@@ -88,9 +156,16 @@ const Upload = () => {
             <div className="flex">
               <div className="bg-background rounded-xl border border-gray-700 px-4 py-4 flex-1">
                 <input 
-                  type="text" 
+                  type="number" 
+                  name="price"
+                  value={formData.price}
+                  onChange={handleChange}
                   placeholder="0" 
                   className="bg-transparent text-gray-400 w-full outline-none"
+                  required
+                  min="0.01"
+                  step="0.01"
+                  disabled={loading}
                 />
               </div>
               <div className="bg-background rounded-xl border border-gray-700 px-4 py-4 ml-2 flex items-center">
@@ -102,13 +177,36 @@ const Upload = () => {
             </div>
           </div>
 
+          {/* Tags Field */}
+          <div className="mb-10">
+            <label className="block text-white text-xl font-bold mb-4">
+              Tags<span className="text-primary-colour">*</span>
+            </label>
+            <div className="bg-background rounded-xl border border-gray-700 px-4 py-4">
+              <input 
+                type="text" 
+                name="tags"
+                value={formData.tags.join(', ')}
+                onChange={handleTagsChange}
+                placeholder="e.g: hiphop, trap, 90bpm (comma separated)" 
+                className="bg-transparent text-gray-400 w-full outline-none"
+                required
+                disabled={loading}
+              />
+            </div>
+          </div>
+
           {/* Submit Button */}
           <div>
-            <button className="bg-primary-colour text-white py-4 px-12 text-lg font-semibold w-full rounded-xl">
-              Create Item
+            <button 
+              type="submit"
+              className="bg-primary-colour text-white py-4 px-12 text-lg font-semibold w-full rounded-xl"
+              disabled={loading}
+            >
+              {loading ? 'Creating...' : 'Create Item'}
             </button>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );
